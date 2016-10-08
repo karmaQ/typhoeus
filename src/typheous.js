@@ -24,6 +24,9 @@ class Typheous extends EventEmitter {
         opts.onDrain()
       }
     })
+    // setInterval(()=> {
+    //   console.log("--->>> pool", this.pool)
+    // }, 30000)
   }
 
   release(opts) {
@@ -35,9 +38,10 @@ class Typheous extends EventEmitter {
   }
 
   queue(opts) {
+    // TODO 兼容性!!!
     if(!Array.isArray(opts))
       opts = [ opts ]
-    opts.map( x => this.queuePush(x))
+    opts.map((x) => this.queuePush(x))
   }
 
   queuePush(opts) {
@@ -49,7 +53,8 @@ class Typheous extends EventEmitter {
       }
       try {
         let retval = await opts.processor(error, opts)
-        opts.after && opts.after(retval)
+        // opts.after && (opts.after(retval))
+        opts.after && (await opts.after(retval))
       } catch (ex) {
         this.onError(opts, ex)
       }
@@ -58,7 +63,7 @@ class Typheous extends EventEmitter {
   }
 
   onError(opts, ex) {
-    console.log("error:", ex)
+    console.log("error:", opts, ex)
   }
 }
 export default Typheous

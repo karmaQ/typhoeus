@@ -43,7 +43,7 @@ class Typheous extends events_1.EventEmitter {
     queue(opts) {
         if (!Array.isArray(opts))
             opts = [opts];
-        opts.map(x => this.queuePush(x));
+        opts.map((x) => this.queuePush(x));
     }
     queuePush(opts) {
         this.queueItemSize += 1;
@@ -54,7 +54,7 @@ class Typheous extends events_1.EventEmitter {
             }
             try {
                 let retval = yield opts.processor(error, opts);
-                opts.after && opts.after(retval);
+                opts.after && (yield opts.after(retval));
             }
             catch (ex) {
                 this.onError(opts, ex);
@@ -63,7 +63,7 @@ class Typheous extends events_1.EventEmitter {
         }), opts.priority);
     }
     onError(opts, ex) {
-        console.log("error:", ex);
+        console.log("error:", opts, ex);
     }
 }
 Object.defineProperty(exports, "__esModule", { value: true });

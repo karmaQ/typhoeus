@@ -9,8 +9,8 @@ let genPrm = ()=>{
   })
 }
 
-ty.queue([1,2,3,4,5,6]
-         .map( x =>
-               return {processor: genPrm}
-             )
-        )
+// ty.queue([1,2,3,4,5,6]
+//          .map( x =>
+//                return {processor: genPrm}
+//              )
+//         )
