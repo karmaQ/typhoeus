@@ -17,6 +17,9 @@ class Typheous extends events_1.EventEmitter {
             onDrain: false,
             priority: 5
         };
+        if (opts.gap) {
+            this.options.concurrency = 1;
+        }
         this.pool = generic_pool_1.Pool({
             name: 'pool',
             max: this.options.concurrency,
@@ -59,7 +62,14 @@ class Typheous extends events_1.EventEmitter {
             catch (ex) {
                 this.onError(opts, ex);
             }
-            this.emit('pool:release', opts);
+            if (opts.gap) {
+                setTimeout(() => {
+                    this.emit('pool:release', opts);
+                }, opts.gap);
+            }
+            else {
+                this.emit('pool:release', opts);
+            }
         }), opts.priority);
     }
     onError(opts, ex) {

@@ -4,11 +4,15 @@ import { Pool } from "generic-pool"
 class Typheous extends EventEmitter {
   constructor(opts) {
     super()
+    // opts.gap = 3000
     this.options = {
       concurrency: 10,
       onDrain: false,
       priority: 5
     }
+    if(opts.gap) {
+      this.options.concurrency = 1
+    }    
     this.pool = Pool({
       name: 'pool',
       max: this.options.concurrency,
@@ -24,13 +28,11 @@ class Typheous extends EventEmitter {
         opts.onDrain()
       }
     })
-    // setInterval(()=> {
-    //   console.log("--->>> pool", this.pool)
-    // }, 30000)
   }
 
   release(opts) {
     this.queueItemSize -= 1
+    // console.log(this.queueItemSize + this.plannedQueueCalls, this.pool._inUseObjects)
     this.pool.release(opts._poolReference)
     if(this.queueItemSize + this.plannedQueueCalls == 0) {
       this.emit('pool:drain', opts)
@@ -58,7 +60,14 @@ class Typheous extends EventEmitter {
       } catch (ex) {
         this.onError(opts, ex)
       }
-      this.emit('pool:release', opts)
+      // opts.gap = 3000
+      if(opts.gap) {
+        setTimeout(()=>{
+          this.emit('pool:release', opts)
+        }, opts.gap)
+      } else {
+        this.emit('pool:release', opts)
+      }
     }, opts.priority)
   }
 
