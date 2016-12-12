@@ -1,6 +1,6 @@
 {
-  "name": "typheous",
-  "version": "1.0.1",
+  "name": "typhoeus",
+  "version": "1.0.3",
   "description": "concurrent queue",
   "main": "dist/index.js",
   "scripts": {

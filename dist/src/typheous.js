@@ -2,7 +2,7 @@
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator.throw(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
         function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
         step((generator = generator.apply(thisArg, _arguments)).next());
     });
@@ -18,7 +18,8 @@ class Typheous extends events_1.EventEmitter {
             priority: 5
         };
         if (opts.gap) {
-            this.options.concurrency = 1;
+            this.options.concurrency = 1,
+                this.options.gap = 3000;
         }
         this.pool = generic_pool_1.Pool({
             name: 'pool',
@@ -37,11 +38,14 @@ class Typheous extends events_1.EventEmitter {
         });
     }
     release(opts) {
-        this.queueItemSize -= 1;
-        this.pool.release(opts._poolReference);
-        if (this.queueItemSize + this.plannedQueueCalls == 0) {
-            this.emit('pool:drain', opts);
-        }
+        return __awaiter(this, void 0, void 0, function* () {
+            this.queueItemSize -= 1;
+            this.pool.release(opts._poolReference);
+            opts.release && (yield opts.release(opts.result));
+            if (this.queueItemSize + this.plannedQueueCalls == 0) {
+                this.emit('pool:drain', opts);
+            }
+        });
     }
     queue(opts) {
         if (!Array.isArray(opts))
@@ -56,8 +60,8 @@ class Typheous extends events_1.EventEmitter {
                 console.error('pool acquire error:', error);
             }
             try {
-                let retval = yield opts.processor(error, opts);
-                opts.after && (yield opts.after(retval));
+                let result = yield opts.processor(error, opts);
+                opts.result = result;
             }
             catch (ex) {
                 this.onError(opts, ex);
@@ -68,12 +72,19 @@ class Typheous extends events_1.EventEmitter {
                 }, opts.gap);
             }
             else {
-                this.emit('pool:release', opts);
+                setImmediate(() => {
+                    this.emit('pool:release', opts);
+                });
             }
         }), opts.priority);
     }
-    onError(opts, ex) {
-        console.log("error:", opts, ex);
+    onError(opts, error) {
+        if (opts.onError) {
+            opts.onError(error);
+        }
+        else {
+            console.log("error:", error);
+        }
     }
 }
 Object.defineProperty(exports, "__esModule", { value: true });

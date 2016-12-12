@@ -11,7 +11,8 @@ class Typheous extends EventEmitter {
       priority: 5
     }
     if(opts.gap) {
-      this.options.concurrency = 1
+      this.options.concurrency = 1,
+      this.options.gap = 3000
     }    
     this.pool = Pool({
       name: 'pool',
@@ -30,10 +31,11 @@ class Typheous extends EventEmitter {
     })
   }
 
-  release(opts) {
+  async release(opts) {
     this.queueItemSize -= 1
     // console.log(this.queueItemSize + this.plannedQueueCalls, this.pool._inUseObjects)
     this.pool.release(opts._poolReference)
+    opts.release && (await opts.release(opts.result))
     if(this.queueItemSize + this.plannedQueueCalls == 0) {
       this.emit('pool:drain', opts)
     }
@@ -54,25 +56,33 @@ class Typheous extends EventEmitter {
         console.error('pool acquire error:', error)
       }
       try {
-        let retval = await opts.processor(error, opts)
-        // opts.after && (opts.after(retval))
-        opts.after && (await opts.after(retval))
+        let result = await opts.processor(error, opts)
+        // opts.after && (opts.after(result))
+        // opts.after && (await opts.after(result))
+        opts.result = result
       } catch (ex) {
         this.onError(opts, ex)
       }
+      // console.log(opts.gap)
       // opts.gap = 3000
       if(opts.gap) {
         setTimeout(()=>{
           this.emit('pool:release', opts)
         }, opts.gap)
       } else {
-        this.emit('pool:release', opts)
+        setImmediate(()=>{
+          this.emit('pool:release', opts)
+        })
       }
     }, opts.priority)
   }
 
-  onError(opts, ex) {
-    console.log("error:", opts, ex)
+  onError(opts, error) {
+    if(opts.onError) {
+      opts.onError(error)
+    } else {
+      console.log("error:", error)
+    }
   }
 }
 export default Typheous
