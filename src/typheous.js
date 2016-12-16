@@ -6,13 +6,13 @@ class Typheous extends EventEmitter {
     super()
     // opts.gap = 3000
     this.options = {
-      concurrency: 10,
+      concurrency: opts.concurrency || 10,
       onDrain: false,
       priority: 5
     }
     if(opts.gap) {
       this.options.concurrency = 1,
-      this.options.gap = 3000
+      this.options.gap = opts.gap
     }    
     this.pool = Pool({
       name: 'pool',
@@ -63,7 +63,7 @@ class Typheous extends EventEmitter {
       } catch (ex) {
         this.onError(opts, ex)
       }
-      // console.log(opts.gap)
+      console.log('---->',opts.gap)
       // opts.gap = 3000
       if(opts.gap) {
         setTimeout(()=>{
