@@ -59,15 +59,21 @@ class Typheous extends events_1.EventEmitter {
             if (error) {
                 console.error('pool acquire error:', error);
             }
-            try {
-                let result = yield opts.processor(error, opts);
-                opts.result = result;
-            }
-            catch (ex) {
-                this.onError(opts, ex);
-            }
-            console.log('---->', opts.gap);
             if (opts.gap) {
+                try {
+                    let result = yield opts.processor(error, opts);
+                    opts.result = result;
+                }
+                catch (ex) {
+                    opts.retry = opts.retry || 0;
+                    opts.retry += 1;
+                    if (opts.retry < 6) {
+                        this.queue(opts);
+                    }
+                    else {
+                        this.onError(opts, ex);
+                    }
+                }
                 setTimeout(() => {
                     this.emit('pool:release', opts);
                 }, opts.gap);
@@ -77,7 +83,7 @@ class Typheous extends events_1.EventEmitter {
                     this.emit('pool:release', opts);
                 });
             }
-        }), opts.priority);
+        }), opts.priority || 5);
     }
     onError(opts, error) {
         if (opts.onError) {
