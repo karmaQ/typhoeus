@@ -60,21 +60,21 @@ class Typheous extends events_1.EventEmitter {
                 console.error('pool acquire error:', error);
             }
             if (opts.gap) {
-                try {
-                    let result = yield opts.processor(error, opts);
-                    opts.result = result;
-                }
-                catch (ex) {
-                    opts.retry = opts.retry || 0;
-                    opts.retry += 1;
-                    if (opts.retry < 6) {
-                        this.queue(opts);
-                    }
-                    else {
-                        this.onError(opts, ex);
-                    }
-                }
                 setTimeout(() => {
+                    try {
+                        let result = yield opts.processor(error, opts);
+                        opts.result = result;
+                    }
+                    catch (ex) {
+                        opts.retry = opts.retry || 0;
+                        opts.retry += 1;
+                        if (opts.retry < 6) {
+                            this.queue(opts);
+                        }
+                        else {
+                            this.onError(opts, ex);
+                        }
+                    }
                     this.emit('pool:release', opts);
                 }, opts.gap);
             }
