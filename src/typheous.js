@@ -57,21 +57,21 @@ class Typheous extends EventEmitter {
       }
       // opts.gap = 3000
       if(opts.gap) {
-        setTimeout(()=>{
-          try {
-            let result = await opts.processor(error, opts)
-            // opts.after && (opts.after(result))
-            // opts.after && (await opts.after(result))
-            opts.result = result
-          } catch (ex) {
-            opts.retry = opts.retry || 0
-            opts.retry += 1
-            if(opts.retry < 6) {
-              this.queue(opts)
-            } else {
-              this.onError(opts, ex)
-            }
+        try {
+          let result = await opts.processor(error, opts)
+          // opts.after && (opts.after(result))
+          // opts.after && (await opts.after(result))
+          opts.result = result
+        } catch (ex) {
+          opts.retry = opts.retry || 0
+          opts.retry += 1
+          if(opts.retry < 6) {
+            this.queue(opts)
+          } else {
+            this.onError(opts, ex)
           }
+        }
+        setTimeout(()=>{
           this.emit('pool:release', opts)
         }, opts.gap)
       } else {
