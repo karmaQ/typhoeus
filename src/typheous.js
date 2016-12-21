@@ -33,6 +33,7 @@ class Typheous extends EventEmitter {
 
   async release(opts) {
     this.queueItemSize -= 1
+    // TODO need retry
     // console.log(this.queueItemSize + this.plannedQueueCalls, this.pool._inUseObjects)
     this.pool.release(opts._poolReference)
     opts.release && (await opts.release(opts.result))
@@ -55,29 +56,23 @@ class Typheous extends EventEmitter {
       if(error) {
         console.error('pool acquire error:', error)
       }
-      // opts.gap = 3000
-      if(opts.gap) {
-        try {
-          let result = await opts.processor(error, opts)
-          // opts.after && (opts.after(result))
-          // opts.after && (await opts.after(result))
-          opts.result = result
-        } catch (ex) {
-          opts.retry = opts.retry || 0
-          opts.retry += 1
-          if(opts.retry < 6) {
-            this.queue(opts)
-          } else {
-            this.onError(opts, ex)
-          }
+      try {
+        opts.result = await opts.processor(error, opts)
+        if(opts.gap) {
+          setTimeout(()=>{
+            this.emit('pool:release', opts)
+          }, opts.gap)
+        } else {
+          this.emit('pool:release', opts)
         }
-        setTimeout(()=>{
-          this.emit('pool:release', opts)
-        }, opts.gap)
-      } else {
-        setImmediate(()=>{
-          this.emit('pool:release', opts)
-        })
+      } catch(ex) {
+        opts.retry = opts.retry || 0
+        opts.retry += 1
+        if(opts.retry < 6) {
+          this.queue(opts)
+        } else {
+          this.onError(opts, ex)
+        }
       }
     }, opts.priority || 5)
   }
