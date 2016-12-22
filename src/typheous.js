@@ -33,19 +33,21 @@ class Typheous extends EventEmitter {
 
   async release(opts) {
     this.queueItemSize -= 1
-    // TODO need retry
     // console.log(this.queueItemSize + this.plannedQueueCalls, this.pool._inUseObjects)
-    this.pool.release(opts._poolReference)
-    opts.release && (await opts.release(opts.result))
-    if(this.queueItemSize + this.plannedQueueCalls == 0) {
-      this.emit('pool:drain', opts)
+    try {
+      this.pool.release(opts._poolReference)
+      if(this.queueItemSize + this.plannedQueueCalls == 0) {
+        this.emit('pool:drain', opts)
+      }      
+      opts.release && (await opts.release(opts.result))
+    } catch(ex) {
+      console.log('released callback error:', ex)
     }
   }
 
   queue(opts) {
     // TODO 兼容性!!!
-    if(!Array.isArray(opts))
-      opts = [ opts ]
+    if(!Array.isArray(opts)) { opts = [ opts ] }
     opts.map((x) => this.queuePush(x))
   }
 
@@ -58,21 +60,16 @@ class Typheous extends EventEmitter {
       }
       try {
         opts.result = await opts.processor(error, opts)
-        if(opts.gap) {
-          setTimeout(()=>{
-            this.emit('pool:release', opts)
-          }, opts.gap)
-        } else {
-          this.emit('pool:release', opts)
-        }
+        this.emit('pool:release', opts)
       } catch(ex) {
-        opts.retry = opts.retry || 0
-        opts.retry += 1
-        if(opts.retry < 6) {
-          this.queue(opts)
-        } else {
-          this.onError(opts, ex)
-        }
+        this.onError(opts, ex)
+        // opts.retry = opts.retry || 0
+        // opts.retry += 1
+        // if(opts.retry < 6) {
+        //   this.queue(opts)
+        // } else {
+        //   this.onError(opts, ex)
+        // }
       }
     }, opts.priority || 5)
   }
