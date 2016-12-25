@@ -67,10 +67,12 @@ class Typheous extends events_1.EventEmitter {
             }
             try {
                 opts.result = yield opts.processor(error, opts);
-                this.emit('pool:release', opts);
             }
             catch (ex) {
                 this.onError(opts, ex);
+            }
+            finally {
+                this.emit('pool:release', opts);
             }
         }), opts.priority || 5);
     }

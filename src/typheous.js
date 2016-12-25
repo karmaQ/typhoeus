@@ -60,7 +60,7 @@ class Typheous extends EventEmitter {
       }
       try {
         opts.result = await opts.processor(error, opts)
-        this.emit('pool:release', opts)
+        
       } catch(ex) {
         this.onError(opts, ex)
         // opts.retry = opts.retry || 0
@@ -70,6 +70,8 @@ class Typheous extends EventEmitter {
         // } else {
         //   this.onError(opts, ex)
         // }
+      } finally {
+        this.emit('pool:release', opts)
       }
     }, opts.priority || 5)
   }
