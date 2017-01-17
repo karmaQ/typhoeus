@@ -11,6 +11,9 @@ const events_1 = require("events");
 const generic_pool_1 = require("generic-pool");
 class Typheous extends events_1.EventEmitter {
     constructor(opts) {
+        if (!opts) {
+            opts = {};
+        }
         super();
         this.options = {
             concurrency: opts.concurrency || 10,

@@ -3,6 +3,9 @@ import { Pool } from "generic-pool"
 
 class Typheous extends EventEmitter {
   constructor(opts) {
+		if(!opts) {
+			opts = {}
+		}
     super()
     // opts.gap = 3000
     this.options = {
