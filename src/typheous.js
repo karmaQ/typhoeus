@@ -12,8 +12,8 @@ class Typheous extends EventEmitter {
       opts.rateLimit = opts.rateLimit
     }
     this.pool = createPool({
-        create: () => {return Math.random()*100000000} ,
-        destroy: (r) => console.log(r)
+        create: opts.create || (() => {return Math.random()} ),
+        destroy: opts.destroy || ((r) => console.log(r))
       }, {
         max: opts.concurrency || 10,
         priorityRange: opts.priorityRange || 10,
