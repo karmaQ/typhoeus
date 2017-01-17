@@ -9,82 +9,89 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 const events_1 = require("events");
 const generic_pool_1 = require("generic-pool");
+const utils_1 = require("./utils");
 class Typheous extends events_1.EventEmitter {
-    constructor(opts) {
-        if (!opts) {
-            opts = {};
-        }
+    constructor(opts = {}) {
         super();
-        this.options = {
-            concurrency: opts.concurrency || 10,
-            onDrain: false,
-            priority: 5
-        };
-        if (opts.gap) {
-            this.options.concurrency = 1,
-                this.options.gap = opts.gap;
+        this.opts = opts;
+        this.opts.retryTimeout = this.opts.retryTimeout || 3000;
+        if (opts.rateLimit) {
+            opts.concurrency = 1,
+                opts.rateLimit = opts.rateLimit;
         }
-        this.pool = generic_pool_1.Pool({
-            name: 'pool',
-            max: this.options.concurrency,
-            priorityRange: 10,
-            create: cb => cb(1),
-            destroy: () => { }
+        this.pool = generic_pool_1.createPool({
+            create: () => { return Math.random() * 100000000; },
+            destroy: (r) => console.log(r)
+        }, {
+            max: opts.concurrency || 10,
+            priorityRange: opts.priorityRange || 10,
+            Promise: opts.Promise || global.Promise
         });
         this.queueItemSize = 0;
         this.plannedQueueCalls = 0;
         this.on('pool:release', opts => this.release(opts));
-        this.on('pool:drain', opts => {
-            if (opts.onDrain) {
-                opts.onDrain();
-            }
-        });
+        this.on('pool:drain', opts => { if (opts.drain) {
+            opts.drain();
+        } });
     }
     release(opts) {
         return __awaiter(this, void 0, void 0, function* () {
             this.queueItemSize -= 1;
             try {
-                this.pool.release(opts._poolReference);
+                yield this.pool.release(opts._poolReference);
                 if (this.queueItemSize + this.plannedQueueCalls == 0) {
                     this.emit('pool:drain', opts);
                 }
-                opts.release && (yield opts.release(opts.result));
             }
             catch (ex) {
                 console.log('released callback error:', ex);
             }
+            finally {
+                return opts.result;
+            }
         });
     }
     queue(opts) {
-        if (!Array.isArray(opts)) {
-            opts = [opts];
-        }
-        opts.map((x) => this.queuePush(x));
+        return Promise.all(utils_1.castArray(opts).map((x) => __awaiter(this, void 0, void 0, function* () { return yield this.acquire(x); })));
     }
-    queuePush(opts) {
-        this.queueItemSize += 1;
-        this.pool.acquire((error, poolReference) => __awaiter(this, void 0, void 0, function* () {
-            opts._poolReference = poolReference;
-            if (error) {
-                console.error('pool acquire error:', error);
-            }
+    acquire(opts) {
+        return __awaiter(this, void 0, void 0, function* () {
+            this.queueItemSize += 1;
             try {
-                opts.result = yield opts.processor(error, opts);
+                opts._poolReference = yield this.pool.acquire(opts.priority);
+                opts.result = yield opts.acquire(opts);
+                this.emit('pool:release', opts);
+                return opts.release ? opts.release(opts.result) : opts.result;
             }
             catch (ex) {
-                this.onError(opts, ex);
-            }
-            finally {
                 this.emit('pool:release', opts);
+                return this.retry(opts, ex);
             }
-        }), opts.priority || 5);
+        });
     }
-    onError(opts, error) {
-        if (opts.onError) {
-            opts.onError(error);
+    retry(opts, ex) {
+        return __awaiter(this, void 0, void 0, function* () {
+            console.log(`retry: ${opts.retryTimes || 1} times`);
+            opts.retryTimes ? opts.retryTimes += 1 : opts.retryTimes = 1;
+            return new Promise((resolve, reject) => {
+                if (opts.retryTimes >= 3) {
+                    resolve(this.error(opts, ex));
+                }
+                else {
+                    opts.priority = 0;
+                    setTimeout((opts) => __awaiter(this, void 0, void 0, function* () {
+                        return resolve(yield this.acquire(opts));
+                    }), opts.retryTimeout || this.opts.retryTimeout, opts);
+                }
+            });
+        });
+    }
+    error(opts, error) {
+        if (opts.error) {
+            return opts.error(error, opts);
         }
         else {
-            console.log("error:", error);
+            return console.log("error:", error);
         }
     }
 }

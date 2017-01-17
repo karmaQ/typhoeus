@@ -12,6 +12,6 @@
   "author": "karma",
   "license": "ISC",
   "dependencies": {
-    "generic-pool": "^2.4.2"
+    "generic-pool": "^3.1.6"
   }
 }
