@@ -3,14 +3,14 @@ let ty = new Typheous
 let genPrm = ()=>{
   return new Promise((resolve, reject)=>{
     setTimeout(()=>{
-      console.log(new Date())
-      resolve()
-    }, 3000)
+      resolve(new Date())
+    }, 100)
   })
 }
 
-// ty.queue([1,2,3,4,5,6]
-//          .map( x =>
-//                return {processor: genPrm}
-//              )
-//         )
+
+
+let re = async ()=> {
+  return console.log(await ty.queue([1,2,3,4,5,6].map( x => { return {acquire: genPrm} })))
+}
+re()

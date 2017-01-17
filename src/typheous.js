@@ -1,41 +1,35 @@
 import { EventEmitter } from "events"
-import { Pool } from "generic-pool"
+import { createPool } from "generic-pool"
+import { castArray } from "./utils"
 
 class Typheous extends EventEmitter {
-  constructor(opts) {
+  constructor(opts = {}) {
     super()
-    // opts.gap = 3000
-    this.options = {
-      concurrency: opts.concurrency || 10,
-      onDrain: false,
-      priority: 5
-    }
-    if(opts.gap) {
-      this.options.concurrency = 1,
-      this.options.gap = opts.gap
+
+    if(opts.rateLimit) {
+      opts.concurrency = 1,
+      opts.rateLimit = opts.rateLimit
     }    
-    this.pool = Pool({
-      name: 'pool',
-      max: this.options.concurrency,
-      priorityRange: 10,
-      create: cb => cb(1),
-      destroy: () => {}
-    })
+    this.pool = createPool({
+        create: async (r) => {return Math.random()*100000000} ,
+        destroy: () => Promise.resolve()
+      }, {
+        max: opts.concurrency || 10,
+        priorityRange: opts.priorityRange || 10,
+        Promise: opts.Promise || global.Promise
+      })
+
     this.queueItemSize = 0
     this.plannedQueueCalls = 0
+
     this.on('pool:release', opts => this.release(opts))
-    this.on('pool:drain', opts => {
-      if(opts.onDrain) {
-        opts.onDrain()
-      }
-    })
+    this.on('pool:drain', opts => {if(opts.drain) { opts.drain() }} )
   }
 
   async release(opts) {
     this.queueItemSize -= 1
-    // console.log(this.queueItemSize + this.plannedQueueCalls, this.pool._inUseObjects)
     try {
-      this.pool.release(opts._poolReference)
+      await this.pool.release(opts._poolReference)
       if(this.queueItemSize + this.plannedQueueCalls == 0) {
         this.emit('pool:drain', opts)
       }      
@@ -46,39 +40,25 @@ class Typheous extends EventEmitter {
   }
 
   queue(opts) {
-    // TODO 兼容性!!!
-    if(!Array.isArray(opts)) { opts = [ opts ] }
-    opts.map((x) => this.queuePush(x))
+    return Promise.all(castArray(opts).map(async (x) => await this.queuePush(x)))
   }
 
-  queuePush(opts) {
+  async queuePush(opts) {
     this.queueItemSize += 1
-    this.pool.acquire(async (error, poolReference) => {
-      opts._poolReference = poolReference
-      if(error) {
-        console.error('pool acquire error:', error)
-      }
-      try {
-        opts.result = await opts.processor(error, opts)
-        
-      } catch(ex) {
-        this.onError(opts, ex)
-        // opts.retry = opts.retry || 0
-        // opts.retry += 1
-        // if(opts.retry < 6) {
-        //   this.queue(opts)
-        // } else {
-        //   this.onError(opts, ex)
-        // }
-      } finally {
-        this.emit('pool:release', opts)
-      }
-    }, opts.priority || 5)
+    try {
+      opts._poolReference = await this.pool.acquire(opts.priority)
+      opts.result = await opts.acquire(opts)
+    } catch(ex) {
+      this.error(opts, ex)
+    } finally {
+      this.emit('pool:release', opts)
+      return opts.result
+    }
   }
 
-  onError(opts, error) {
-    if(opts.onError) {
-      opts.onError(error)
+  async error(opts, error) {
+    if(opts.error) {
+      await opts.error(error)
     } else {
       console.log("error:", error)
     }
