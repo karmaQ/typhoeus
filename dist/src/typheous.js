@@ -88,6 +88,9 @@ class Typheous extends events_1.EventEmitter {
     }
     error(opts, error) {
         if (opts.error) {
+            delete opts._poolReference;
+            delete opts.retryTimes;
+            delete opts.retry;
             return opts.error(error, opts);
         }
         else {

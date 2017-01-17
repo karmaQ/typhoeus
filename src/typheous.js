@@ -18,7 +18,8 @@ class Typheous extends EventEmitter {
         max: opts.concurrency || 10,
         priorityRange: opts.priorityRange || 10,
         Promise: opts.Promise || global.Promise
-      })
+      }
+    )
 
     this.queueItemSize = 0
     this.plannedQueueCalls = 0
@@ -75,6 +76,9 @@ class Typheous extends EventEmitter {
 
   error(opts, error) {
     if(opts.error) {
+      delete opts._poolReference
+      delete opts.retryTimes
+      delete opts.retry
       return opts.error(error, opts)
     } else {
       return console.log("error:", error)
