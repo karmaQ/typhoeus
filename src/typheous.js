@@ -76,9 +76,9 @@ class Typheous extends EventEmitter {
 
   error(opts, error) {
     if(opts.error) {
-      delete opts._poolReference
-      delete opts.retryTimes
-      delete opts.retry
+      // delete opts._poolReference
+      // delete opts.retryTimes
+      // delete opts.retryTimeout
       return opts.error(error, opts)
     } else {
       return console.log("error:", error)
