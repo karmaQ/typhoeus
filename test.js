@@ -4,13 +4,14 @@ let genPrm = ()=>{
   return new Promise((resolve, reject)=>{
     setTimeout(()=>{
       resolve(new Date())
-    }, 100)
+    }, 1000)
   })
 }
 
 
 
 let re = async ()=> {
-  return console.log(await ty.queue([1,2,3,4,5,6].map( x => { return {acquire: genPrm} })))
+  console.log(await ty.queue([1,2,3,4,5,6].map( x => { return {acquire: genPrm} })))
+  console.log(await ty.queue([3,4,5,5,6].map( x => { return {acquire: genPrm} })))
 }
 re()

@@ -13,11 +13,12 @@ let genPrm = () => {
     return new Promise((resolve, reject) => {
         setTimeout(() => {
             resolve(new Date());
-        }, 100);
+        }, 1000);
     });
 };
 let re = () => __awaiter(this, void 0, void 0, function* () {
-    return console.log(yield ty.queue([1, 2, 3, 4, 5, 6].map(x => { return { acquire: genPrm }; })));
+    console.log(yield ty.queue([1, 2, 3, 4, 5, 6].map(x => { return { acquire: genPrm }; })));
+    console.log(yield ty.queue([3, 4, 5, 5, 6].map(x => { return { acquire: genPrm }; })));
 });
 re();
 //# sourceMappingURL=test.js.map
