@@ -42,6 +42,10 @@ class Typheous extends EventEmitter {
     }
   }
 
+  /**
+   * 
+   * @param {Object} opts - The queue options
+   */
   queue(opts) {
     return Promise.all(castArray(opts).map(async (x) => await this.acquire(x)))
   }
@@ -59,6 +63,12 @@ class Typheous extends EventEmitter {
     }
   }
 
+  /**
+   * 
+   * @param {Object} opts - The options
+   * @param {Object} ex - The error
+   * @returns {Promise} - 
+   */
   async retry(opts, ex) {
     console.log(`retry: ${opts.retryTimes || 1} times`)
     opts.retryTimes ? opts.retryTimes += 1 : opts.retryTimes = 1
