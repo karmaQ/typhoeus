@@ -54,6 +54,7 @@ class Typheous extends EventEmitter {
     this.queueItemSize += 1
     try {
       opts._poolReference = await this.pool.acquire(opts.priority)
+      // 回调在这里生成
       opts.result = await opts.acquire(opts)
       this.emit('pool:release', opts)
       return opts.release ? opts.release(opts.result) : opts.result 
