@@ -17,6 +17,10 @@ class Typheous extends events_1.EventEmitter {
         this.opts.retryTimeout = this.opts.retryTimeout || 3000;
         this.opts.acquire = opts.acquire || (r => r);
         this.opts.release = opts.release || (r => r);
+<<<<<<< HEAD
+=======
+        this.opts.error = opts.error || (r => r);
+>>>>>>> 0667088f4b8d5615fa2d8435c1f6f094753429ad
         if (opts.rateLimit) {
             opts.concurrency = 1,
                 opts.rateLimit = opts.rateLimit;
@@ -62,7 +66,16 @@ class Typheous extends events_1.EventEmitter {
             try {
                 opts._poolReference = yield this.pool.acquire(opts.priority);
                 opts.result = yield (opts.acquire || this.opts.acquire)(opts);
+<<<<<<< HEAD
                 this.emit('pool:release', opts);
+=======
+                if (opts.rateLimit) {
+                    setTimeout(function () { this.emit('pool:release', opts); }, opts.rateLimit);
+                }
+                else {
+                    this.emit('pool:release', opts);
+                }
+>>>>>>> 0667088f4b8d5615fa2d8435c1f6f094753429ad
                 return (opts.release || this.opts.release)(opts);
             }
             catch (ex) {
@@ -73,8 +86,8 @@ class Typheous extends events_1.EventEmitter {
     }
     retry(opts, ex) {
         return __awaiter(this, void 0, void 0, function* () {
-            console.log(`retry: ${opts.retryTimes || 1} times`);
             opts.retryTimes ? opts.retryTimes += 1 : opts.retryTimes = 1;
+            console.log(`retry: ${opts.retryTimes} times`);
             return new Promise((resolve, reject) => {
                 if (opts.retryTimes >= 3) {
                     resolve(this.error(opts, ex));
@@ -89,8 +102,10 @@ class Typheous extends events_1.EventEmitter {
         });
     }
     error(opts, error) {
-        if (opts.error) {
-            return opts.error(error, opts);
+        let doError = opts.error || this.opts.error;
+        if (doError) {
+            delete opts._poolReference;
+            return doError(error, opts);
         }
         else {
             return console.log("error:", error);
