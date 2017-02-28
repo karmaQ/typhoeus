@@ -7,13 +7,15 @@ class Typheous extends EventEmitter {
     super()
     this.opts = opts
     this.opts.retryTimeout = this.opts.retryTimeout || 3000
+    this.opts.acquire = opts.acquire || (r=>r)
+    this.opts.release = opts.release || (r=>r)
     if(opts.rateLimit) {
       opts.concurrency = 1,
       opts.rateLimit = opts.rateLimit
     }
     this.pool = createPool({
-        create: opts.create || (() => {return Math.random()} ),
-        destroy: opts.destroy || ((r) => console.log(r))
+        create: opts.create || Math.random ,
+        destroy: opts.destroy || console.log,
       }, {
         max: opts.concurrency || 10,
         priorityRange: opts.priorityRange || 10,
@@ -55,9 +57,13 @@ class Typheous extends EventEmitter {
     try {
       opts._poolReference = await this.pool.acquire(opts.priority)
       // 回调在这里生成
-      opts.result = await opts.acquire(opts)
-      this.emit('pool:release', opts)
-      return opts.release ? opts.release(opts.result) : opts.result 
+      opts.result = await (opts.acquire || this.opts.acquire)(opts)
+      if(opts.rateLimit) {
+        setTimeout(function(){ this.emit('pool:release', opts) }, opts.rateLimit)
+      } else {
+        this.emit('pool:release', opts)
+      }
+      return (opts.release || this.opts.release)(opts) 
     } catch(ex) {
       this.emit('pool:release', opts)
       return this.retry(opts, ex)
@@ -90,7 +96,7 @@ class Typheous extends EventEmitter {
       // delete opts._poolReference
       // delete opts.retryTimes
       // delete opts.retryTimeout
-      return opts.error(error, opts)
+      return opts['catch'](error, opts)
     } else {
       return console.log("error:", error)
     }
