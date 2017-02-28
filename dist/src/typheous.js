@@ -15,13 +15,15 @@ class Typheous extends events_1.EventEmitter {
         super();
         this.opts = opts;
         this.opts.retryTimeout = this.opts.retryTimeout || 3000;
+        this.opts.acquire = opts.acquire || (r => r);
+        this.opts.release = opts.release || (r => r);
         if (opts.rateLimit) {
             opts.concurrency = 1,
                 opts.rateLimit = opts.rateLimit;
         }
         this.pool = generic_pool_1.createPool({
-            create: opts.create || (() => { return Math.random(); }),
-            destroy: opts.destroy || ((r) => console.log(r))
+            create: opts.create || Math.random,
+            destroy: opts.destroy || console.log,
         }, {
             max: opts.concurrency || 10,
             priorityRange: opts.priorityRange || 10,
@@ -59,9 +61,9 @@ class Typheous extends events_1.EventEmitter {
             this.queueItemSize += 1;
             try {
                 opts._poolReference = yield this.pool.acquire(opts.priority);
-                opts.result = yield opts.acquire(opts);
+                opts.result = yield (opts.acquire || this.opts.acquire)(opts);
                 this.emit('pool:release', opts);
-                return opts.release ? opts.release(opts.result) : opts.result;
+                return (opts.release || this.opts.release)(opts);
             }
             catch (ex) {
                 this.emit('pool:release', opts);
