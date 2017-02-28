@@ -17,10 +17,7 @@ class Typheous extends events_1.EventEmitter {
         this.opts.retryTimeout = this.opts.retryTimeout || 3000;
         this.opts.acquire = opts.acquire || (r => r);
         this.opts.release = opts.release || (r => r);
-<<<<<<< HEAD
-=======
         this.opts.error = opts.error || (r => r);
->>>>>>> 0667088f4b8d5615fa2d8435c1f6f094753429ad
         if (opts.rateLimit) {
             opts.concurrency = 1,
                 opts.rateLimit = opts.rateLimit;
@@ -66,16 +63,12 @@ class Typheous extends events_1.EventEmitter {
             try {
                 opts._poolReference = yield this.pool.acquire(opts.priority);
                 opts.result = yield (opts.acquire || this.opts.acquire)(opts);
-<<<<<<< HEAD
-                this.emit('pool:release', opts);
-=======
                 if (opts.rateLimit) {
                     setTimeout(function () { this.emit('pool:release', opts); }, opts.rateLimit);
                 }
                 else {
                     this.emit('pool:release', opts);
                 }
->>>>>>> 0667088f4b8d5615fa2d8435c1f6f094753429ad
                 return (opts.release || this.opts.release)(opts);
             }
             catch (ex) {
