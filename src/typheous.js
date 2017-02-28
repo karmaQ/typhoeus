@@ -9,6 +9,7 @@ class Typheous extends EventEmitter {
     this.opts.retryTimeout = this.opts.retryTimeout || 3000
     this.opts.acquire = opts.acquire || (r=>r)
     this.opts.release = opts.release || (r=>r)
+    this.opts.error = opts.error || (r=>r)
     if(opts.rateLimit) {
       opts.concurrency = 1,
       opts.rateLimit = opts.rateLimit
@@ -77,8 +78,8 @@ class Typheous extends EventEmitter {
    * @returns {Promise} - 
    */
   async retry(opts, ex) {
-    console.log(`retry: ${opts.retryTimes || 1} times`)
     opts.retryTimes ? opts.retryTimes += 1 : opts.retryTimes = 1
+    console.log(`retry: ${opts.retryTimes} times`)
     return new Promise((resolve, reject)=>{
       if(opts.retryTimes >= 3) {
         resolve(this.error(opts, ex))
@@ -92,11 +93,12 @@ class Typheous extends EventEmitter {
   }
 
   error(opts, error) {
-    if(opts.error) {
-      // delete opts._poolReference
+    let doError = opts.error || this.opts.error
+    if(doError) {
+      delete opts._poolReference
       // delete opts.retryTimes
       // delete opts.retryTimeout
-      return opts['catch'](error, opts)
+      return doError(error, opts)
     } else {
       return console.log("error:", error)
     }

@@ -17,6 +17,7 @@ class Typheous extends events_1.EventEmitter {
         this.opts.retryTimeout = this.opts.retryTimeout || 3000;
         this.opts.acquire = opts.acquire || (r => r);
         this.opts.release = opts.release || (r => r);
+        this.opts.error = opts.error || (r => r);
         if (opts.rateLimit) {
             opts.concurrency = 1,
                 opts.rateLimit = opts.rateLimit;
@@ -78,8 +79,8 @@ class Typheous extends events_1.EventEmitter {
     }
     retry(opts, ex) {
         return __awaiter(this, void 0, void 0, function* () {
-            console.log(`retry: ${opts.retryTimes || 1} times`);
             opts.retryTimes ? opts.retryTimes += 1 : opts.retryTimes = 1;
+            console.log(`retry: ${opts.retryTimes} times`);
             return new Promise((resolve, reject) => {
                 if (opts.retryTimes >= 3) {
                     resolve(this.error(opts, ex));
@@ -94,8 +95,10 @@ class Typheous extends events_1.EventEmitter {
         });
     }
     error(opts, error) {
-        if (opts.error) {
-            return opts['catch'](error, opts);
+        let doError = opts.error || this.opts.error;
+        if (doError) {
+            delete opts._poolReference;
+            return doError(error, opts);
         }
         else {
             return console.log("error:", error);
