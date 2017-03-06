@@ -93,7 +93,7 @@ class Typheous extends events_1.EventEmitter {
                 else {
                     this.emit('pool:release', opts);
                 }
-                return opts.release(opts.result);
+                return opts.release(opts.result, opts.item);
             }
             catch (error) {
                 this.emit('pool:release', opts);

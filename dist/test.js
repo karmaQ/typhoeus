@@ -21,15 +21,18 @@ let genPrm = () => {
 let ty = new index_1.default({
     concurrency: 10,
     acquire: genPrm,
-    release: (x) => { return x; },
-    error: (error, opts) => { console.log(opts); }
+    release: (x, y) => { return [y, x]; },
+    error: (error, opts) => { console.log(opts); },
+    maxRetryTimes: 1
 });
 let re = () => __awaiter(this, void 0, void 0, function* () {
-    let arr = [], i = 100;
-    while (i-- > 0) {
+    let arr = [], i = 0;
+    while (i++ < 10) {
         arr.push(i);
     }
-    console.log(yield ty.queue(arr));
+    let res = yield ty.queue(arr);
+    console.log(res);
+    console.log(res.length);
     console.log(ty.lastCatched);
 });
 re();
