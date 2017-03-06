@@ -11,18 +11,12 @@ const events_1 = require("events");
 const generic_pool_1 = require("generic-pool");
 const utils_1 = require("./utils");
 let tileSym = Symbol('tile');
+let __typhoeus;
 class Typhoeus extends events_1.EventEmitter {
     constructor(opts = {}) {
         super();
-        this._opts = opts;
-        this._opts.retryTimeout = opts.retryTimeout || 3000;
-        this._opts.acquire = opts.acquire || (r => r);
-        this._opts.release = opts.release || (r => r);
-        this._opts.error = opts.error || (r => r);
-        if (opts.rateLimit) {
-            opts.concurrency = 1,
-                opts.rateLimit = opts.rateLimit;
-        }
+        this._opts = {};
+        this._opts = this.defaultOpts(opts);
         this.pool = generic_pool_1.createPool({
             create: opts.create || Math.random,
             destroy: opts.destroy || console.log,
@@ -64,9 +58,9 @@ class Typhoeus extends events_1.EventEmitter {
             retopts.item = item;
         }
         retopts.retryTimeout = opts.retryTimeout || this._opts.retryTimeout || 3000;
-        retopts.acquire = opts.acquire || this._opts.acquire;
-        retopts.release = opts.release || this._opts.release;
-        retopts.error = opts.error || this._opts.error;
+        retopts.acquire = opts.acquire || this._opts.acquire || (x => x);
+        retopts.release = opts.release || this._opts.release || (x => x);
+        retopts.error = opts.error || this._opts.error || console.log;
         retopts.maxRetryTimes = this._opts.maxRetryTimes || 3;
         let rateLimit = opts.rateLimit || this._opts.rateLimit;
         if (rateLimit) {
@@ -141,7 +135,17 @@ class Typhoeus extends events_1.EventEmitter {
             return console.log("error:", error);
         }
     }
+    static map(items, acquire, opts = 10) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (typeof (opts) === 'number') {
+                opts = { concurrency: opts };
+            }
+            opts.acquire = acquire;
+            return __typhoeus.queue(items, opts);
+        });
+    }
 }
+__typhoeus = new Typhoeus();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = Typhoeus;
 //# sourceMappingURL=typhoeus.js.map

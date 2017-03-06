@@ -2,19 +2,13 @@ import { EventEmitter } from "events"
 import { createPool } from "generic-pool"
 import { castArray, isArray } from "./utils"
 let tileSym = Symbol('tile')
-
+let __typhoeus
 class Typhoeus extends EventEmitter {
   constructor(opts = {}) {
     super()
-    this._opts = opts
-    this._opts.retryTimeout = opts.retryTimeout || 3000
-    this._opts.acquire = opts.acquire || (r=>r)
-    this._opts.release = opts.release || (r=>r)
-    this._opts.error = opts.error || (r=>r)
-    if(opts.rateLimit) {
-      opts.concurrency = 1,
-      opts.rateLimit = opts.rateLimit
-    }
+    this._opts = {}
+    this._opts = this.defaultOpts(opts)
+
     this.pool = createPool({
         create: opts.create || Math.random ,
         destroy: opts.destroy || console.log,
@@ -55,9 +49,9 @@ class Typhoeus extends EventEmitter {
     if(tile) { retopts.tile = tile }
     if(item !== undefined) { retopts.item = item }
     retopts.retryTimeout = opts.retryTimeout || this._opts.retryTimeout || 3000
-    retopts.acquire = opts.acquire || this._opts.acquire
-    retopts.release = opts.release || this._opts.release
-    retopts.error = opts.error || this._opts.error
+    retopts.acquire = opts.acquire || this._opts.acquire || (x=> x)
+    retopts.release = opts.release || this._opts.release || (x=> x)
+    retopts.error = opts.error || this._opts.error || console.log
     retopts.maxRetryTimes = this._opts.maxRetryTimes || 3
     let rateLimit = opts.rateLimit || this._opts.rateLimit
     if(rateLimit) {
@@ -140,5 +134,15 @@ class Typhoeus extends EventEmitter {
       return console.log("error:", error)
     }
   }
+
+  static async map(items, acquire, opts = 10) {
+    if(typeof(opts) === 'number') {
+      opts = { concurrency: opts }
+    }
+    opts.acquire = acquire
+    return __typhoeus.queue(items, opts)
+  }
 }
+__typhoeus = new Typhoeus()
+
 export default Typhoeus

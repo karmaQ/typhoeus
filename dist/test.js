@@ -15,7 +15,7 @@ let genPrm = () => {
     return new Promise((resolve, reject) => {
         setTimeout(() => {
             resolve(new Date());
-        }, 1000);
+        }, Math.floor(Math.random() * 1000));
     });
 };
 let ty = new index_1.default({
@@ -27,11 +27,11 @@ let ty = new index_1.default({
 });
 let re = () => __awaiter(this, void 0, void 0, function* () {
     let arr = [], i = 0;
-    while (i++ < 10) {
+    while (i++ < 100) {
         arr.push(i);
     }
-    let res = yield ty.queue(arr);
-    console.log(ty.rejected(res));
+    let res2 = yield index_1.default.map(arr, genPrm, 3);
+    console.log(res2);
 });
 re();
 //# sourceMappingURL=test.js.map

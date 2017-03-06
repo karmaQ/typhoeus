@@ -7,7 +7,7 @@ let genPrm = ()=>{
   return new Promise((resolve, reject)=>{
     setTimeout(()=>{
       resolve(new Date())
-    }, 1000)
+    }, Math.floor(Math.random()* 1000))
   })
 }
 
@@ -25,10 +25,12 @@ let re = async ()=> {
   //   return x + '2'
   // }} }))
   let arr = [], i = 0
-  while(i++ < 10){ arr.push(i) }
-  let res = await ty.queue(arr)
-  console.log(ty.rejected(res))
-
+  while(i++ < 100){ arr.push(i) }
+  // let res = await ty.queue(arr)
+  // console.log(res)
+  let res2 = await Typhoeus.map(arr, genPrm, 3)
+  console.log(res2)
+  // res2.forEach(console.log)
 }
 re();
 // (function wait () {
