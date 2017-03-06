@@ -8,7 +8,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 const index_1 = require("./index");
-let ty = new index_1.default;
 let genPrm = () => {
     if (Math.random() * 5 > 4) {
         throw new Error('hahaha error');
@@ -19,18 +18,19 @@ let genPrm = () => {
         }, 1000);
     });
 };
+let ty = new index_1.default({
+    concurrency: 10,
+    acquire: genPrm,
+    release: (x) => { return x; },
+    error: (error, opts) => { console.log(opts); }
+});
 let re = () => __awaiter(this, void 0, void 0, function* () {
     let arr = [], i = 100;
     while (i-- > 0) {
         arr.push(i);
     }
-    console.log(yield ty.queue(arr.map(x => {
-        return {
-            acquire: genPrm,
-            release: (x) => { return x; },
-            error: (error, opts) => { console.log(opts); }
-        };
-    })));
+    console.log(yield ty.queue(arr));
+    console.log(ty.lastCatched);
 });
 re();
 //# sourceMappingURL=test.js.map

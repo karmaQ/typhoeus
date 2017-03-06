@@ -1,5 +1,5 @@
 import Typheous from "./index"
-let ty = new Typheous
+
 let genPrm = ()=>{
   if(Math.random()*5 > 4) {
     throw new Error('hahaha error')
@@ -11,6 +11,12 @@ let genPrm = ()=>{
   })
 }
 
+let ty = new Typheous({
+    concurrency: 10,
+    acquire: genPrm, 
+    release: (x)=>{ return x },
+    error: (error, opts)=> { console.log(opts) }
+})
 
 
 let re = async ()=> {
@@ -19,11 +25,8 @@ let re = async ()=> {
   // }} }))
   let arr = [], i = 100
   while(i-- >0){ arr.push(i) }
-  console.log(await ty.queue(arr.map( x => { return {
-    acquire: genPrm, 
-    release: (x)=>{ return x },
-    error: (error, opts)=> { console.log(opts) }
-  } })))
+  console.log(await ty.queue(arr))
+  console.log(ty.lastCatched)
 }
 re();
 // (function wait () {
