@@ -28,8 +28,12 @@ let re = async ()=> {
   while(i++ < 100){ arr.push(i) }
   // let res = await ty.queue(arr)
   // console.log(res)
-  let res2 = await Typhoeus.map(arr, genPrm, 3)
-  console.log(res2)
+  // let res2 = await Typhoeus.map(arr, genPrm, 3)
+  // console.log(res2)
+
+  let res3 = await ty.map(arr, genPrm, 3)
+  console.log(res3)
+
   // res2.forEach(console.log)
 }
 re();

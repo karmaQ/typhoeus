@@ -135,14 +135,19 @@ class Typhoeus extends events_1.EventEmitter {
             return console.log("error:", error);
         }
     }
+    map(items, acquire, opts = {}) {
+        if (typeof (opts) === 'number') {
+            opts = { concurrency: opts };
+        }
+        opts.acquire = acquire;
+        return this.queue(items, opts);
+    }
     static map(items, acquire, opts = 10) {
-        return __awaiter(this, void 0, void 0, function* () {
-            if (typeof (opts) === 'number') {
-                opts = { concurrency: opts };
-            }
-            opts.acquire = acquire;
-            return __typhoeus.queue(items, opts);
-        });
+        if (typeof (opts) === 'number') {
+            opts = { concurrency: opts };
+        }
+        opts.acquire = acquire;
+        return __typhoeus.queue(items, opts);
     }
 }
 __typhoeus = new Typhoeus();

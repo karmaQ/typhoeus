@@ -135,7 +135,15 @@ class Typhoeus extends EventEmitter {
     }
   }
 
-  static async map(items, acquire, opts = 10) {
+  map(items, acquire, opts = {}) {
+    if(typeof(opts) === 'number') {
+      opts = { concurrency: opts }
+    }
+    opts.acquire = acquire
+    return this.queue(items, opts)
+  }
+
+  static map(items, acquire, opts = 10) {
     if(typeof(opts) === 'number') {
       opts = { concurrency: opts }
     }

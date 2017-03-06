@@ -30,8 +30,8 @@ let re = () => __awaiter(this, void 0, void 0, function* () {
     while (i++ < 100) {
         arr.push(i);
     }
-    let res2 = yield index_1.default.map(arr, genPrm, 3);
-    console.log(res2);
+    let res3 = yield ty.map(arr, genPrm, 3);
+    console.log(res3);
 });
 re();
 //# sourceMappingURL=test.js.map
