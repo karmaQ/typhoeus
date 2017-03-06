@@ -19,7 +19,7 @@ let genPrm = () => {
     });
 };
 let ty = new index_1.default({
-    concurrency: 10,
+    concurrency: 5,
     acquire: genPrm,
     release: (x, y) => { return [y, x]; },
     error: (error, opts) => { console.log(opts); },
@@ -31,9 +31,7 @@ let re = () => __awaiter(this, void 0, void 0, function* () {
         arr.push(i);
     }
     let res = yield ty.queue(arr);
-    console.log(res);
-    console.log(res.length);
-    console.log(ty.lastCatched);
+    console.log(ty.rejected(res));
 });
 re();
 //# sourceMappingURL=test.js.map

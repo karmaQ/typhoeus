@@ -1,5 +1,5 @@
 "use strict";
-const typheous_1 = require("./src/typheous");
+const typhoeus_1 = require("./src/typhoeus");
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.default = typheous_1.default;
+exports.default = typhoeus_1.default;
 //# sourceMappingURL=index.js.map

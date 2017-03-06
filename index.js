@@ -1,3 +1,3 @@
-import Typheous from "./src/typheous"
+import Typhoeus from "./src/typhoeus"
 
-export default Typheous
+export default Typhoeus

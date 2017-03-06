@@ -1,4 +1,4 @@
-import Typheous from "./index"
+import Typhoeus from "./index"
 
 let genPrm = ()=>{
   if(Math.random()*5 > 4) {
@@ -11,8 +11,8 @@ let genPrm = ()=>{
   })
 }
 
-let ty = new Typheous({
-    concurrency: 10,
+let ty = new Typhoeus({
+    concurrency: 5,
     acquire: genPrm, 
     release: (x, y)=>{ return [y, x] },
     error: (error, opts)=> { console.log(opts) },
@@ -27,9 +27,8 @@ let re = async ()=> {
   let arr = [], i = 0
   while(i++ < 10){ arr.push(i) }
   let res = await ty.queue(arr)
-  console.log(res)
-  console.log(res.length)
-  console.log(ty.lastCatched)
+  console.log(ty.rejected(res))
+
 }
 re();
 // (function wait () {

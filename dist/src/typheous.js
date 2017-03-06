@@ -10,6 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 const events_1 = require("events");
 const generic_pool_1 = require("generic-pool");
 const utils_1 = require("./utils");
+let tileSym = Symbol('tile');
 class Typheous extends events_1.EventEmitter {
     constructor(opts = {}) {
         super();
@@ -32,7 +33,6 @@ class Typheous extends events_1.EventEmitter {
         });
         this.queueItemSize = 0;
         this.plannedQueueCalls = 0;
-        this.catched = [];
         this.on('pool:release', opts => this.release(opts));
         this.on('pool:drain', opts => { if (opts.drain) {
             opts.drain();
@@ -55,8 +55,11 @@ class Typheous extends events_1.EventEmitter {
             }
         });
     }
-    defaultOpts(opts = {}, item) {
+    defaultOpts(opts = {}, item, tile) {
         let retopts = {};
+        if (tile) {
+            retopts.tile = tile;
+        }
         if (item !== undefined) {
             retopts.item = item;
         }
@@ -73,27 +76,37 @@ class Typheous extends events_1.EventEmitter {
         return retopts;
     }
     queue(items, opts) {
-        this.lastCatched = [];
+        let tile = { resolved: [], rejected: [] };
         if (utils_1.isArray(items)) {
-            return Promise.all(items.map((x) => __awaiter(this, void 0, void 0, function* () { return yield this.acquire(this.defaultOpts(opts, x)); })));
+            return Promise.all(items.map((x) => __awaiter(this, void 0, void 0, function* () { return yield this.acquire(this.defaultOpts(opts, x, tile)); }))).then((value) => {
+                value[tileSym] = tile;
+                return value;
+            });
         }
         else {
             return this.acquire(this.defaultOpts(opts, items));
         }
+    }
+    rejected(result) {
+        return result[tileSym].rejected;
+    }
+    resolved(result) {
+        return result[tileSym].resolved;
     }
     acquire(opts) {
         return __awaiter(this, void 0, void 0, function* () {
             this.queueItemSize += 1;
             try {
                 opts._poolReference = yield this.pool.acquire(opts.priority);
-                opts.result = yield opts.acquire(opts);
+                let result = yield opts.acquire(opts);
                 if (opts.rateLimit) {
                     setTimeout(function () { this.emit('pool:release', opts); }, opts.rateLimit);
                 }
                 else {
                     this.emit('pool:release', opts);
                 }
-                return opts.release(opts.result, opts.item);
+                opts.tile.resolved.push(opts.item);
+                return opts.release(result, opts.item);
             }
             catch (error) {
                 this.emit('pool:release', opts);
@@ -121,8 +134,7 @@ class Typheous extends events_1.EventEmitter {
     error(opts, error) {
         if (opts.error) {
             delete opts._poolReference;
-            this.catched.push(opts.item);
-            this.lastCatched.push(opts.item);
+            opts.tile.rejected.push(opts.item);
             return opts.error(error, opts.item);
         }
         else {
