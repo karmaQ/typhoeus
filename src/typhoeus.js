@@ -73,11 +73,11 @@ class Typhoeus extends EventEmitter {
     }
   }
 
-  rejected(result) {
+  static rejected(result) {
     return result[tileSym].rejected
   }
 
-  resolved(result) {
+  static resolved(result) {
     return result[tileSym].resolved
   }
 
