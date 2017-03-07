@@ -88,7 +88,7 @@ class Typhoeus extends EventEmitter {
       opts._poolReference = await this.pool.acquire(opts.priority)
       // 回调在这里生成
       // console.log(opts._poolReference, opts)
-      let result = await opts.acquire(opts)
+      let result = await opts.acquire(opts.item)
       if(opts.rateLimit) {
         setTimeout(function(){ this.emit('pool:release', opts) }, opts.rateLimit)
       } else {

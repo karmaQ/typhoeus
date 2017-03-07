@@ -92,7 +92,7 @@ class Typhoeus extends events_1.EventEmitter {
             this.queueItemSize += 1;
             try {
                 opts._poolReference = yield this.pool.acquire(opts.priority);
-                let result = yield opts.acquire(opts);
+                let result = yield opts.acquire(opts.item);
                 if (opts.rateLimit) {
                     setTimeout(function () { this.emit('pool:release', opts); }, opts.rateLimit);
                 }
