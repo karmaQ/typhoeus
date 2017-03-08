@@ -9,9 +9,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 const index_1 = require("./index");
 let genPrm = () => {
-    if (Math.random() * 5 > 4) {
-        throw new Error('hahaha error');
-    }
     return new Promise((resolve, reject) => {
         setTimeout(() => {
             resolve(new Date());
@@ -30,8 +27,8 @@ let re = () => __awaiter(this, void 0, void 0, function* () {
     while (i++ < 100) {
         arr.push(i);
     }
-    let res3 = yield ty.map(arr, genPrm, 3);
-    console.log(res3);
+    let res = yield ty.queue(arr);
+    console.log(res);
 });
 re();
 //# sourceMappingURL=test.js.map

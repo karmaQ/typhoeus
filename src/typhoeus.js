@@ -69,15 +69,15 @@ class Typhoeus extends EventEmitter {
         return value
       })
     } else {
-      return this.acquire(this.defaultOpts(opts, items))
+      return this.acquire(this.defaultOpts(opts, items, tile))
     }
   }
 
-  rejected(result) {
+  static rejected(result) {
     return result[tileSym].rejected
   }
 
-  resolved(result) {
+  static resolved(result) {
     return result[tileSym].resolved
   }
 

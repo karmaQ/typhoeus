@@ -1,9 +1,9 @@
 import Typhoeus from "./index"
 
 let genPrm = ()=>{
-  if(Math.random()*5 > 4) {
-    throw new Error('hahaha error')
-  }
+  // if(Math.random()*5 > 4) {
+  //   throw new Error('hahaha error')
+  // }
   return new Promise((resolve, reject)=>{
     setTimeout(()=>{
       resolve(new Date())
@@ -26,13 +26,13 @@ let re = async ()=> {
   // }} }))
   let arr = [], i = 0
   while(i++ < 100){ arr.push(i) }
-  // let res = await ty.queue(arr)
-  // console.log(res)
+  let res = await ty.queue(arr)
+  console.log(res)
   // let res2 = await Typhoeus.map(arr, genPrm, 3)
   // console.log(res2)
 
-  let res3 = await ty.map(arr, genPrm, 3)
-  console.log(res3)
+  // let res3 = await ty.map(arr, genPrm, 3)
+  // console.log(res3)
 
   // res2.forEach(console.log)
 }
