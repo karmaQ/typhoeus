@@ -10,12 +10,12 @@ class Typhoeus extends EventEmitter {
     this._opts = this.defaultOpts(opts)
 
     this.pool = createPool({
-        create: opts.create || Math.random ,
-        destroy: opts.destroy || console.log,
+        create: this._opts.create || Math.random ,
+        destroy: this._opts.destroy || console.log,
       }, {
-        max: opts.concurrency || 10,
-        priorityRange: opts.priorityRange || 10,
-        Promise: opts.Promise || global.Promise
+        max: this._opts.concurrency || 10,
+        priorityRange: this._opts.priorityRange || 10,
+        Promise: this._opts.Promise || global.Promise
       }
     )
 
@@ -33,7 +33,8 @@ class Typhoeus extends EventEmitter {
         this.emit('pool:drain', opts)
       }
     } catch(ex) {
-      console.log('released callback error:', ex)
+      console.log('released callback error:')
+      console.log(ex)
     } finally {
       return opts.result
     }
@@ -61,13 +62,15 @@ class Typhoeus extends EventEmitter {
     return retopts
   }
 
-  queue(items, opts) {
+  async queue(items, opts) {
     let tile = {resolved:[], rejected: []}
     if(isArray(items)) {
-      return Promise.all(items.map(async (x) => await this.acquire(this.defaultOpts(opts, x, tile)))).then((value)=>{
-        value[tileSym] = tile
-        return value
-      })
+      return await Promise.all(items.map(async (x) => await this.acquire(this.defaultOpts(opts, x, tile))))
+        .then((value)=>{
+          value[tileSym] = tile
+          return value
+        }
+      )
     } else {
       return this.acquire(this.defaultOpts(opts, items, tile))
     }
@@ -83,21 +86,21 @@ class Typhoeus extends EventEmitter {
 
   async acquire(opts) {
     this.queueItemSize += 1
+    opts._poolReference = await this.pool.acquire(opts.priority)
     try {
-      // let _poolReference = await this.pool.acquire(opts.priority)
-      opts._poolReference = await this.pool.acquire(opts.priority)
-      // 回调在这里生成
-      // console.log(opts._poolReference, opts)
       let result = await opts.acquire(opts.item)
       if(opts.rateLimit) {
-        setTimeout(function(){ this.emit('pool:release', opts) }, opts.rateLimit)
+        setTimeout(()=>{ 
+          opts.tile.resolved.push(opts.item)
+          this.emit('pool:release', opts) 
+        }, opts.rateLimit)
       } else {
+        opts.tile.resolved.push(opts.item)
         this.emit('pool:release', opts)
       }
-      opts.tile.resolved.push(opts.item)
-      return opts.release(result, opts.item) 
+      return result//opts.release(result, opts.item) 
     } catch(error) {
-      this.emit('pool:release', opts)
+      // this.emit('pool:release', opts)
       return this.retry(opts, error)
     }
   }
@@ -105,7 +108,7 @@ class Typhoeus extends EventEmitter {
   /**
    * 
    * @param {Object} opts - The options
-   * @param {Object} ex - The error
+   * @param {Object} error - The error
    * @returns {Promise} - 
    */
   async retry(opts, error) {
@@ -125,9 +128,6 @@ class Typhoeus extends EventEmitter {
 
   error(opts, error) {
     if(opts.error) {
-      delete opts._poolReference
-      // delete opts.retryTimes
-      // delete opts.retryTimeout
       opts.tile.rejected.push(opts.item)
       return opts.error(error, opts.item)
     } else {
