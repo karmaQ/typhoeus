@@ -13,7 +13,7 @@ let getPromise = () => {
     return new Promise((resolve, reject) => {
         setTimeout(() => {
             resolve(42);
-        }, Math.floor(Math.random() * 1000));
+        }, Math.floor(Math.random() * 3000));
     });
 };
 let typhoeus = new index_1.default({
@@ -30,7 +30,7 @@ describe('使用 Typhoeus 控制并发,', function () {
             while (i++ < 10) {
                 arr.push(i);
             }
-            let ret = yield index_1.default.map(arr, getPromise, 3);
+            let ret = yield index_1.default.map(arr, getPromise, 1);
             chai_1.expect(ret).to.be.eql([42, 42, 42, 42, 42, 42, 42, 42, 42, 42]);
         });
     });

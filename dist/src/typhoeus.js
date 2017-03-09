@@ -27,28 +27,43 @@ class Typhoeus extends events_1.EventEmitter {
         });
         this.queueItemSize = 0;
         this.plannedQueueCalls = 0;
-        this.on('pool:release', opts => this.release(opts));
+        this._pause = false;
+        this.neededRelease = [];
+        this.on('pool:release', this.release);
         this.on('pool:drain', opts => { if (opts.drain) {
             opts.drain();
         } });
     }
     release(opts) {
         return __awaiter(this, void 0, void 0, function* () {
-            this.queueItemSize -= 1;
             try {
-                yield this.pool.release(opts._poolReference);
-                if (this.queueItemSize + this.plannedQueueCalls == 0) {
-                    this.emit('pool:drain', opts);
+                if (this._pause) {
+                    this.neededRelease.push(opts);
+                }
+                else {
+                    this.queueItemSize -= 1;
+                    yield this.pool.release(opts._poolReference);
+                    if (this.queueItemSize + this.plannedQueueCalls == 0) {
+                        this.emit('pool:drain', opts);
+                    }
                 }
             }
             catch (ex) {
                 console.log('released callback error:');
                 console.log(ex);
             }
-            finally {
-                return opts.result;
-            }
         });
+    }
+    pause() {
+        this.pause = true;
+    }
+    resume() {
+        this._pause = false;
+        let neededRelease = this.neededRelease;
+        this.neededRelease = [];
+        for (let nr of neededRelease) {
+            this.emit('pool:release', nr);
+        }
     }
     defaultOpts(opts = {}, item, tile) {
         let retopts = {};

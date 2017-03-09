@@ -21,22 +21,39 @@ class Typhoeus extends EventEmitter {
 
     this.queueItemSize = 0
     this.plannedQueueCalls = 0
-    this.on('pool:release', opts => this.release(opts))
+    this._pause = false
+    this.neededRelease = []
+    this.on('pool:release', this.release)
     this.on('pool:drain', opts => {if(opts.drain) { opts.drain() }} )
   }
 
   async release(opts) {
-    this.queueItemSize -= 1
     try {
-      await this.pool.release(opts._poolReference)
-      if(this.queueItemSize + this.plannedQueueCalls == 0) {
-        this.emit('pool:drain', opts)
+      if(this._pause) {
+        this.neededRelease.push(opts)
+      } else {
+        this.queueItemSize -= 1
+        await this.pool.release(opts._poolReference)
+        if(this.queueItemSize + this.plannedQueueCalls == 0) {
+          this.emit('pool:drain', opts)
+        }
       }
     } catch(ex) {
       console.log('released callback error:')
       console.log(ex)
-    } finally {
-      return opts.result
+    }
+  }
+
+  pause() {
+    this.pause = true
+  }
+
+  resume() {
+    this._pause = false
+    let neededRelease = this.neededRelease
+    this.neededRelease = []
+    for(let nr of neededRelease) {
+      this.emit('pool:release', nr)
     }
   }
 
