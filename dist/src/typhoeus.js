@@ -88,6 +88,7 @@ class Typhoeus extends events_1.EventEmitter {
     queue(items, opts) {
         return __awaiter(this, void 0, void 0, function* () {
             let tile = { resolved: [], rejected: [] };
+            opts = items.opts ? items.opts : opts;
             if (utils_1.isArray(items)) {
                 return yield Promise.all(items.map((x) => __awaiter(this, void 0, void 0, function* () { return yield this.acquire(this.defaultOpts(opts, x, tile)); })))
                     .then((value) => {

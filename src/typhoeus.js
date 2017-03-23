@@ -81,6 +81,7 @@ class Typhoeus extends EventEmitter {
 
   async queue(items, opts) {
     let tile = {resolved:[], rejected: []}
+    opts = items.opts ? items.opts : opts
     if(isArray(items)) {
       return await Promise.all(items.map(async (x) => await this.acquire(this.defaultOpts(opts, x, tile))))
         .then((value)=>{
