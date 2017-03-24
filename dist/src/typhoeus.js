@@ -21,7 +21,7 @@ class Typhoeus extends events_1.EventEmitter {
             create: this._opts.create || Math.random,
             destroy: this._opts.destroy || console.log,
         }, {
-            max: this._opts.concurrent || 10,
+            max: this._opts.concurrent,
             priorityRange: this._opts.priorityRange || 10,
             Promise: this._opts.Promise || global.Promise
         });
@@ -78,6 +78,8 @@ class Typhoeus extends events_1.EventEmitter {
         retopts.release = opts.release || this._opts.release || (x => x);
         retopts.error = opts.error || this._opts.error || console.log;
         retopts.maxRetryTimes = this._opts.maxRetryTimes || 3;
+        retopts.concurrent = opts.concurrent || this._opts.concurrent || 10;
+        retopts.priorityRange = opts.priorityRange || this._opts.priorityRange || 10;
         let rateLimit = opts.rateLimit || this._opts.rateLimit;
         if (rateLimit) {
             retopts.concurrent = 1,
