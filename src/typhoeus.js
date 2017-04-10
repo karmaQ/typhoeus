@@ -164,11 +164,7 @@ class Typhoeus extends EventEmitter {
   }
 
   static map(items, acquire, opts = 10) {
-    if(typeof(opts) === 'number') {
-      opts = { concurrent: opts }
-    }
-    opts.acquire = acquire
-    return __typhoeus.queue(items, opts)
+    return __typhoeus.map(items, acquire, opts)
   }
 }
 __typhoeus = new Typhoeus()
