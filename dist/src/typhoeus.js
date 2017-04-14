@@ -125,12 +125,12 @@ class Typhoeus extends events_1.EventEmitter {
                     opts.tile.resolved.push(opts.item);
                     this.emit('pool:release', opts);
                 }
-                return opts.release(result, opts.item);
             }
             catch (error) {
                 this.emit('pool:release', opts);
                 return this.retry(opts, error);
             }
+            return opts.release(result, opts.item);
         });
     }
     retry(opts, error) {
