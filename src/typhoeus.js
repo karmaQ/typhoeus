@@ -155,7 +155,7 @@ class Typhoeus extends EventEmitter {
     }
   }
 
-  map(items, acquire, opts = {}) {
+  map(items, acquire, opts = 10) {
     if(typeof(opts) === 'number') {
       opts = { concurrent: opts }
     }
