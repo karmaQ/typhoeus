@@ -159,7 +159,7 @@ class Typhoeus extends events_1.EventEmitter {
             return console.log("error:", error);
         }
     }
-    map(items, acquire, opts = {}) {
+    map(items, acquire, opts = 10) {
         if (typeof (opts) === 'number') {
             opts = { concurrent: opts };
         }
