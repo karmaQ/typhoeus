@@ -147,8 +147,8 @@ class Typhoeus extends EventEmitter {
   }
 
   error(opts, error) {
+    opts.tile.rejected.push(opts.item)
     if(opts.error) {
-      opts.tile.rejected.push(opts.item)
       return opts.error(error, opts.item)
     } else {
       return console.log("error:", error)
