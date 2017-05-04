@@ -111,10 +111,11 @@ class Typhoeus extends events_1.EventEmitter {
     }
     acquire(opts) {
         return __awaiter(this, void 0, void 0, function* () {
+            let result;
             this.queueItemSize += 1;
             opts._poolReference = yield this.pool.acquire(opts.priority);
             try {
-                let result = yield opts.acquire(opts.item);
+                result = yield opts.acquire(opts.item);
                 if (opts.rateLimit) {
                     setTimeout(() => {
                         opts.tile.resolved.push(opts.item);
@@ -125,11 +126,16 @@ class Typhoeus extends events_1.EventEmitter {
                     opts.tile.resolved.push(opts.item);
                     this.emit('pool:release', opts);
                 }
-                return opts.release(result, opts.item);
             }
             catch (error) {
                 this.emit('pool:release', opts);
                 return this.retry(opts, error);
+            }
+            try {
+                return opts.release(result, opts.item);
+            }
+            catch (err) {
+                this.error(opts, err);
             }
         });
     }
@@ -159,7 +165,7 @@ class Typhoeus extends events_1.EventEmitter {
             return console.log("error:", error);
         }
     }
-    map(items, acquire, opts = {}) {
+    map(items, acquire, opts = 10) {
         if (typeof (opts) === 'number') {
             opts = { concurrent: opts };
         }

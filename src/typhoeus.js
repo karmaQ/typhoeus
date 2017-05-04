@@ -105,10 +105,11 @@ class Typhoeus extends EventEmitter {
   }
 
   async acquire(opts) {
+    let result
     this.queueItemSize += 1
     opts._poolReference = await this.pool.acquire(opts.priority)
     try {
-      let result = await opts.acquire(opts.item)
+      result = await opts.acquire(opts.item)
       if(opts.rateLimit) {
         setTimeout(()=>{ 
           opts.tile.resolved.push(opts.item)
@@ -118,10 +119,15 @@ class Typhoeus extends EventEmitter {
         opts.tile.resolved.push(opts.item)
         this.emit('pool:release', opts)
       }
-      return opts.release(result, opts.item) 
+      
     } catch(error) {
       this.emit('pool:release', opts)
       return this.retry(opts, error)
+    }
+    try {
+      return opts.release(result, opts.item) 
+    } catch(err) {
+      this.error(opts, err)
     }
   }
 
